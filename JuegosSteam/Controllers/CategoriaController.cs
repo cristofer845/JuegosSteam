@@ -1,6 +1,7 @@
 ﻿using JuegosSteam.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace JuegosSteam.Controllers
 {
@@ -12,31 +13,31 @@ namespace JuegosSteam.Controllers
         private readonly BaseSteamContext db = new();
 
         [HttpGet]
-        public async Task<IActionResult> GetEditor()
+        public async Task<IActionResult> GetCategoria()
         {
             Response response = new();
             try
             {
-                if (db.Editors == null)
+                if (db.Categoria == null)
                 {
                     response.Message = "La tabla no esta activa";
                     return NotFound(response);
                 }
-                var editores = await db.Editors.Select(
+                var categorias = await db.Categoria.Select(
                     x => new
                     {
                         x.Id,
                         x.Nombre,
-                        x.Pais
+                        x.Descripcion
                     }).ToListAsync();
-                if (editores != null)
+                if (categorias != null)
                 {
-                    if (editores.Count == 0)
+                    if (categorias.Count == 0)
                     {
                         response.Message = "No hay registros";
                     }
                     response.Success = true;
-                    response.Data = editores;
+                    response.Data = categorias;
                 }
                 return Ok(response);
             }
@@ -49,14 +50,14 @@ namespace JuegosSteam.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetEditor(int id)
+        public async Task<IActionResult> GetCategoria(int id)
         {
             Response response = new();
             try
             {
                 //find busca solo por el identificador
-                var buscarEditor = await db.Editors.FindAsync(id);
-                if (buscarEditor == null)
+                var buscarCategoria = await db.Categoria.FindAsync(id);
+                if (buscarCategoria == null)
                 {
                     response.Message = "No existe registron con ese id";
                     return NotFound(response);
@@ -64,7 +65,7 @@ namespace JuegosSteam.Controllers
                 else
                 {
                     response.Success = true;
-                    response.Data = buscarEditor;
+                    response.Data = buscarCategoria;
                 }
                 return Ok(response);
             }
@@ -76,7 +77,7 @@ namespace JuegosSteam.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Editor>> PostEditor(Editor editor)
+        public async Task<ActionResult<Categorium>> PostEditor(Editor editor)
         {
 
             db.Editors.Add(editor);
