@@ -1,15 +1,13 @@
-﻿
-
-using JuegosSteam.Models;
-using Microsoft.AspNetCore.Components;
+﻿using JuegosSteam.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace JuegosSteam.Controllers
 {
-    [Microsoft.AspNetCore.Components.Route("api/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
-    public class EditorsController : ControllerBase
+    public class EditorController : ControllerBase
     {
         private readonly BaseSteamContext db = new();
 
@@ -99,7 +97,7 @@ namespace JuegosSteam.Controllers
             var buscarEditor = await db.Editors.FindAsync(id);
             if (buscarEditor != null)
             {
-                
+
                 db.Remove(buscarEditor);
                 await db.SaveChangesAsync();
                 response.Message = "El registro se ha eliminado con éxito";
@@ -113,3 +111,4 @@ namespace JuegosSteam.Controllers
 
     }
 }
+
