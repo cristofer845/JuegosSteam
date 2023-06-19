@@ -79,12 +79,20 @@ namespace JuegosSteam.Controllers
         [HttpPost]
         public async Task<ActionResult<Categorium>> PostCategoria(Categorium categorium)
         {
-
+            var existingCategoria= await db.Categoria.FirstOrDefaultAsync(d => d.Nombre == categorium.Nombre);
+            if (existingCategoria != null)
+            {
+                Response response = new();
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
             db.Categoria.Add(categorium);
             await db.SaveChangesAsync();
-            Response response = new();
-            response.Success = true;
-            response.Message = "Guardado con éxito";
+
+            Response successResponse = new();
+            successResponse.Success = true;
+            successResponse.Message = "Guardado con éxito";
 
             //return Ok(response); //retorna el mensaje que entregamos
             //retorna al getid de sucursal
@@ -102,6 +110,13 @@ namespace JuegosSteam.Controllers
                 {
                     response.Message = "No existe registro con ese id";
                     return NotFound(response);
+                }
+            
+                var existeCategoria = await db.Categoria.AnyAsync(d => d.Nombre == categorium.Nombre && d.Id != id);
+                if (existeCategoria)
+                {
+                    response.Message = "Ya existe una categoria con el mismo nombre";
+                    return BadRequest(response);
                 }
 
                 // Actualizar los datos del usuario con los valores proporcionados

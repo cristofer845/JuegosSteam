@@ -76,18 +76,64 @@ namespace JuegosSteam.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutRole(int id, Role role)
+        {
+            Response response = new();
+            try
+            {
+                var buscarRole = await db.Roles.FindAsync(id);
+                if (buscarRole == null)
+                {
+                    response.Message = "No existe registro con ese id";
+                    return NotFound(response);
+                }
+
+                var existeRole = await db.Roles.AnyAsync(d => d.Nombre == role.Nombre && d.Id != id);
+                if (existeRole)
+                {
+                    response.Message = "Ya existe un rol con el mismo nombre";
+                    return BadRequest(response);
+                }
+
+                // Actualizar los datos del usuario con los valores proporcionados
+                buscarRole.Nombre = role.Nombre;
+                buscarRole.Permisos = role.Permisos;
+
+                await db.SaveChangesAsync();
+
+                response.Success = true;
+                response.Message = "Registro actualizado con éxito";
+                response.Data = buscarRole;
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.Message = "Error: " + ex.ToString();
+                return BadRequest(response);
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<Role>> PostRole(Role role)
         {
 
+            var existingRole = await db.Roles.FirstOrDefaultAsync(d => d.Nombre == role.Nombre);
+            if (existingRole != null)
+            {
+                Response response = new();
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
+
             db.Roles.Add(role);
             await db.SaveChangesAsync();
-            Response response = new();
-            response.Success = true;
-            response.Message = "Guardado con éxito";
 
-            //return Ok(response); //retorna el mensaje que entregamos
-            //retorna al getid de sucursal
+            Response successResponse = new();
+            successResponse.Success = true;
+            successResponse.Message = "Guardado con éxito";
             return CreatedAtAction("GetRole", new { id = role.Id }, role);
         }
         // DELETE: api/Sucursal/1
@@ -98,6 +144,12 @@ namespace JuegosSteam.Controllers
             var buscarRole = await db.Roles.FindAsync(id);
             if (buscarRole != null)
             {
+                var existeUsuario = await db.Usuarios.AnyAsync(u => u.Roles == id);
+                if (existeUsuario)
+                {
+                    response.Message = "No se puede eliminar el rol porque hay usuarios asociados a él";
+                    return BadRequest(response);
+                }
 
                 db.Remove(buscarRole);
                 await db.SaveChangesAsync();
@@ -105,11 +157,9 @@ namespace JuegosSteam.Controllers
                 response.Success = true;
                 return Ok(response);
             }
-            response.Message = "No se encuntra el id";
+            response.Message = "No se encuentra el ID";
             return NotFound(response);
+
         }
-
-
     }
 }
-

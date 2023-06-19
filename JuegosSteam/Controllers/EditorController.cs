@@ -75,18 +75,64 @@ namespace JuegosSteam.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutEditor(int id, Editor editor)
+        {
+            Response response = new();
+            try
+            {
+                var buscarEditor = await db.Editors.FindAsync(id);
+                if (buscarEditor == null)
+                {
+                    response.Message = "No existe registro con ese id";
+                    return NotFound(response);
+                }
+
+                var existeEditor = await db.Editors.AnyAsync(d => d.Nombre == editor.Nombre && d.Id != id);
+                if (existeEditor)
+                {
+                    response.Message = "Ya existe un editor con el mismo nombre";
+                    return BadRequest(response);
+                }
+
+                // Actualizar los datos del usuario con los valores proporcionados
+                buscarEditor.Nombre = editor.Nombre;
+                buscarEditor.Pais = editor.Pais;
+
+                await db.SaveChangesAsync();
+
+                response.Success = true;
+                response.Message = "Registro actualizado con éxito";
+                response.Data = buscarEditor;
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.Message = "Error: " + ex.ToString();
+                return BadRequest(response);
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<Editor>> PostEditor(Editor editor)
         {
 
+            var existeEditor = await db.Editors.FirstOrDefaultAsync(d => d.Nombre == editor.Nombre);
+            if (existeEditor != null)
+            {
+                Response response = new();
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
+
             db.Editors.Add(editor);
             await db.SaveChangesAsync();
-            Response response = new();
-            response.Success = true;
-            response.Message = "Guardado con éxito";
 
-            //return Ok(response); //retorna el mensaje que entregamos
-            //retorna al getid de sucursal
+            Response successResponse = new();
+            successResponse.Success = true;
+            successResponse.Message = "Guardado con éxito";
             return CreatedAtAction("GetEditor", new { id = editor.Id }, editor);
         }
         // DELETE: api/Sucursal/1
@@ -97,6 +143,12 @@ namespace JuegosSteam.Controllers
             var buscarEditor = await db.Editors.FindAsync(id);
             if (buscarEditor != null)
             {
+                var existeJuego = await db.Juegos.AnyAsync(j => j.Editor == id);
+                if (existeJuego)
+                {
+                    response.Message = "No se puede eliminar el editor porque hay juegos asociados a él";
+                    return BadRequest(response);
+                }
 
                 db.Remove(buscarEditor);
                 await db.SaveChangesAsync();
@@ -104,11 +156,9 @@ namespace JuegosSteam.Controllers
                 response.Success = true;
                 return Ok(response);
             }
-            response.Message = "No se encuntra el id";
+            response.Message = "No se encuentra el ID";
             return NotFound(response);
+
         }
-
-
     }
 }
-
