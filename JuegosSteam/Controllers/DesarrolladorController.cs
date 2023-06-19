@@ -75,19 +75,64 @@ namespace JuegosSteam.Controllers
                 return BadRequest();
             }
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutDesarrollador(int id, Desarrollador desarrollador)
+        {
+            Response response = new();
+            try
+            {
+                var buscarDesarrollador = await db.Desarrolladors.FindAsync(id);
+                if (buscarDesarrollador == null)
+                {
+                    response.Message = "No existe registro con ese id";
+                    return NotFound(response);
+                }
+
+                var existeDesarrollador = await db.Desarrolladors.AnyAsync(d => d.Nombre == desarrollador.Nombre && d.Id != id);
+                if (existeDesarrollador)
+                {
+                    response.Message = "Ya existe un desarrollador con el mismo nombre";
+                    return BadRequest(response);
+                }
+
+                // Actualizar los datos del usuario con los valores proporcionados
+                buscarDesarrollador.Nombre = desarrollador.Nombre;
+                buscarDesarrollador.Pais = desarrollador.Pais;
+
+                await db.SaveChangesAsync();
+
+                response.Success = true;
+                response.Message = "Registro actualizado con éxito";
+                response.Data = buscarDesarrollador;
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.Message = "Error: " + ex.ToString();
+                return BadRequest(response);
+            }
+        }
 
         [HttpPost]
         public async Task<ActionResult<Desarrollador>> PostDesarrollador(Desarrollador desarrollador)
         {
 
+            var existingDesarrollador = await db.Desarrolladors.FirstOrDefaultAsync(d => d.Nombre == desarrollador.Nombre);
+            if (existingDesarrollador != null)
+            {
+                Response response = new();
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
+
             db.Desarrolladors.Add(desarrollador);
             await db.SaveChangesAsync();
-            Response response = new();
-            response.Success = true;
-            response.Message = "Guardado con éxito";
 
-            //return Ok(response); //retorna el mensaje que entregamos
-            //retorna al getid de sucursal
+            Response successResponse = new();
+            successResponse.Success = true;
+            successResponse.Message = "Guardado con éxito";
             return CreatedAtAction("GetDesarrollador", new { id = desarrollador.Id }, desarrollador);
         }
         // DELETE: api/Sucursal/1
@@ -98,6 +143,12 @@ namespace JuegosSteam.Controllers
             var buscarDesarrollador = await db.Desarrolladors.FindAsync(id);
             if (buscarDesarrollador != null)
             {
+                var existeJuego = await db.Juegos.AnyAsync(j => j.Desarrollador == id);
+                if (existeJuego)
+                {
+                    response.Message = "No se puede eliminar el desarrollador porque hay juegos asociados a él";
+                    return BadRequest(response);
+                }
 
                 db.Remove(buscarDesarrollador);
                 await db.SaveChangesAsync();
@@ -105,11 +156,10 @@ namespace JuegosSteam.Controllers
                 response.Success = true;
                 return Ok(response);
             }
-            response.Message = "No se encuntra el id";
+            response.Message = "No se encuentra el ID";
             return NotFound(response);
+
         }
-
-
     }
 }
 

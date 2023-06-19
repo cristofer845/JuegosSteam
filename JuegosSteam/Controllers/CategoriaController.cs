@@ -77,10 +77,10 @@ namespace JuegosSteam.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Categorium>> PostEditor(Editor editor)
+        public async Task<ActionResult<Categorium>> PostCategoria(Categorium categorium)
         {
 
-            db.Editors.Add(editor);
+            db.Categoria.Add(categorium);
             await db.SaveChangesAsync();
             Response response = new();
             response.Success = true;
@@ -88,18 +88,58 @@ namespace JuegosSteam.Controllers
 
             //return Ok(response); //retorna el mensaje que entregamos
             //retorna al getid de sucursal
-            return CreatedAtAction("GetEditor", new { id = editor.Id }, editor);
+            return CreatedAtAction("GetCategoria", new { id = categorium.Id }, categorium);
         }
-        // DELETE: api/Sucursal/1
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEditor(int id)
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCategoria(int id, Categorium categorium)
         {
             Response response = new();
-            var buscarEditor = await db.Editors.FindAsync(id);
-            if (buscarEditor != null)
+            try
             {
+                var buscaCategoria = await db.Categoria.FindAsync(id);
+                if (buscaCategoria == null)
+                {
+                    response.Message = "No existe registro con ese id";
+                    return NotFound(response);
+                }
 
-                db.Remove(buscarEditor);
+                // Actualizar los datos del usuario con los valores proporcionados
+                buscaCategoria.Id = categorium.Id;
+                buscaCategoria.Nombre = categorium.Nombre;
+                buscaCategoria.Descripcion = categorium.Descripcion;
+
+                await db.SaveChangesAsync();
+
+                response.Success = true;
+                response.Message = "Registro actualizado con éxito";
+                response.Data = buscaCategoria;
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.Message = "Error: " + ex.ToString();
+                return BadRequest(response);
+            }
+        }
+
+        // DELETE: api/Sucursal/1
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCategoria(int id)
+        {
+            Response response = new();
+            var buscarCategoria = await db.Categoria.FindAsync(id);
+            if (buscarCategoria != null)
+            {
+                var buscarjuegos = await db.Juegos.FirstOrDefaultAsync(x => x.Categoria == id);
+                if (buscarjuegos != null)
+                {
+                    response.Message = "No se puede eliminar por tener datos";
+                    return NotFound(response);
+                }
+
+                db.Remove(buscarCategoria);
                 await db.SaveChangesAsync();
                 response.Message = "El registro se ha eliminado con éxito";
                 response.Success = true;
