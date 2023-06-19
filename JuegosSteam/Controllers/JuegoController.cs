@@ -85,10 +85,17 @@ namespace JuegosSteam.Controllers
         [HttpPost]
         public async Task<ActionResult<Juego>> PostJuego(Juego juego)
         {
+            Response response = new();
+            var existeJuego = await db.Juegos.FirstOrDefaultAsync(d => d.Nombre == juego.Nombre);
+            if (existeJuego != null)
+            {
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
 
             db.Juegos.Add(juego);
             await db.SaveChangesAsync();
-            Response response = new();
             response.Success = true;
             response.Message = "Guardado con éxito";
 
