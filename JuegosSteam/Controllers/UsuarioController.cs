@@ -32,7 +32,6 @@ namespace JuegosSteam.Controllers
                         x.Telefono,
                         x.Correo,
                         x.Roles,
-                        Roless = x.RolesNavigation.Nombre
 
                     }).ToListAsync();
                 if (usuarios != null)
@@ -81,29 +80,22 @@ namespace JuegosSteam.Controllers
             }
         }
 
-
-
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(string Nombre, string Rut, int Telefono, string Correo, int Roles)
+        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
         {
-            Usuario usuarioObj = new()
-            {
-                Nombre = Nombre,
-                Rut = Rut,
-                Telefono = Telefono,
-                Correo = Correo,
-                Roles = Roles,
-            };
-            db.Usuarios.Add(usuarioObj);
+
+            db.Usuarios.Add(usuario);
             await db.SaveChangesAsync();
             Response response = new();
             response.Success = true;
             response.Message = "Guardado con éxito";
 
-            return CreatedAtAction("GetUsuario", new { id = usuarioObj.Id }, usuarioObj);
+            //return Ok(response); //retorna el mensaje que entregamos
+            //retorna al getid de sucursal
+            return CreatedAtAction("GetUsuario", new { id = usuario.Id }, usuario);
         }
 
-            [HttpPut("{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
         {
             Response response = new();

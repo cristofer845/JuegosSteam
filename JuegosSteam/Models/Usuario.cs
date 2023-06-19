@@ -19,5 +19,5 @@ public partial class Usuario
 
     public virtual ICollection<Juego> Juegos { get; set; } = new List<Juego>();
 
-    public virtual Role RolesNavigation { get; set; }
+    public virtual Role? RolesNavigation { get; set; }
 }
