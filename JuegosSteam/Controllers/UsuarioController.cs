@@ -83,10 +83,17 @@ namespace JuegosSteam.Controllers
         [HttpPost]
         public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
         {
+            Response response = new();
+            var existeUsuario = await db.Usuarios.FirstOrDefaultAsync(d => d.Nombre == usuario.Nombre);
+            if (existeUsuario != null)
+            {
+                response.Success = false;
+                response.Message = "El nombre ya está en uso";
+                return BadRequest(response);
+            }
 
             db.Usuarios.Add(usuario);
             await db.SaveChangesAsync();
-            Response response = new();
             response.Success = true;
             response.Message = "Guardado con éxito";
 
@@ -106,6 +113,18 @@ namespace JuegosSteam.Controllers
                 {
                     response.Message = "No existe registro con ese id";
                     return NotFound(response);
+                }
+
+                // Verificar si el nombre ha sido cambiado y si está siendo utilizado por otro usuario
+                if (usuario.Nombre != buscarUsuario.Nombre)
+                {
+                    var existeUsuario = await db.Usuarios.FirstOrDefaultAsync(d => d.Nombre == usuario.Nombre);
+                    if (existeUsuario != null)
+                    {
+                        response.Success = false;
+                        response.Message = "El nombre ya está en uso";
+                        return BadRequest(response);
+                    }
                 }
 
                 // Actualizar los datos del usuario con los valores proporcionados
@@ -129,6 +148,7 @@ namespace JuegosSteam.Controllers
                 return BadRequest(response);
             }
         }
+
 
         // DELETE: api/Sucursal/1
         [HttpDelete("{id}")]
