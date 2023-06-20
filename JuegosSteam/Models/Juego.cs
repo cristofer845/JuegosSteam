@@ -21,11 +21,11 @@ public partial class Juego
 
     public int UsuarioRegistrado { get; set; }
 
-    public virtual Categorium CategoriaNavigation { get; set; } = null!;
+    public virtual Categorium? CategoriaNavigation { get; set; } = null!;
 
-    public virtual Desarrollador DesarrolladorNavigation { get; set; } = null!;
+    public virtual Desarrollador? DesarrolladorNavigation { get; set; } = null!;
 
-    public virtual Editor EditorNavigation { get; set; } = null!;
+    public virtual Editor? EditorNavigation { get; set; } = null!;
 
-    public virtual Usuario UsuarioRegistradoNavigation { get; set; } = null!;
+    public virtual Usuario? UsuarioRegistradoNavigation { get; set; } = null!;
 }
